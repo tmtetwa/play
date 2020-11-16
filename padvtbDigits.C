@@ -34,7 +34,7 @@ using namespace o2::trd;
 
 constexpr int kMINENTRIES = 100;
 
-void CheckDigits(std::string digifile = "trddigits.root",
+void padvtbDigits(std::string digifile = "trddigits.root",
                  std::string hitfile = "o2sim_HitsTRD.root",
                  std::string inputGeom = "",
                  std::string paramfile = "o2sim_par.root")
@@ -48,16 +48,23 @@ void CheckDigits(std::string digifile = "trddigits.root",
   int nev = digitTree->GetEntries();
 
   // TH2F* hPadvRow = new TH2F("hPadvRow", "hPadvRow",144, 0, 143, 16, 0, 15);
-  TH2F* hPadvRowfor1 = new TH2F("hPadvRowfor1", "hPadvRowfor1 det 3;pad;row",144, 0, 143,16, 0, 15);
-  TH2F* hPadvRow1[540];
+  // TH2F* hPadvtbfor1[540];
+  // for (int d = 0; d < 540; ++d) {
+  // TH2F* hPadvtbfor1[d] = new TH2F(Form("hPadvtbfor1_d%", d), Form("hPadvtbfor1 det %d;pad;tb", d), 144, 0, 143, 30, 0, 29);
+  // }
+  TH2F* hPadvtbfor1 = new TH2F("hPadvtbfor1", "hPadvtbfor1 det ;pad;tb",144, 0, 143,30, 0, 29);
+  TH1F* hPadvtbfor1max = new TH1F("hPadvtbfor1max", "hPadvtbfor1 max det ;padsum",100, 0, 1280000);
+  TH2F* hPadvtb1[540];
   for (int d = 0; d < 540; ++d) {
-    hPadvRow1[d] = new TH2F(Form("hPadvRow1_%d", d), Form("hPadvRow1 Detector = %d;pad;row", d), 144, 0, 143, 16, 0, 15);
+    hPadvtb1[d] = new TH2F(Form("hPadvtb1_%d", d), Form("hPadvtb1 Detector = %d;pad;tb", d), 144, 0, 143, 30, 0, 29);
   }
 
   LOG(INFO) << nev << " entries found";
   for (int iev = 0; iev < nev; ++iev) {
     digitTree->GetEvent(iev);
-    for (const auto& digit : *digitCont) {
+    int padsum[30];
+    for (const auto& digit : *digitCont)
+     {
       // loop over det, pad, row?
       auto adcs = digit.getADC();
       int det = digit.getDetector();
@@ -70,51 +77,56 @@ void CheckDigits(std::string digifile = "trddigits.root",
         // LOG(INFO) << "Out of range ADC " << adc;
            continue;
         }
-        int padsum[144][16];
-        padsum[pad][row] += adc;
-        //hPadvRow->Fill(pad,row,adc);
-        hPadvRow1[det]->Fill(pad,row,adc);
+        hPadvtb1[det]->Fill(pad,tb,adc);
 
-        if(det == 9)
+        if(det == 11)
         {
-          //cout << "ADC: " << adc << "DET "<< det << "Pad: " << pad << "R: "
-          //<< row<<endl;
-          if(pad>49 && pad<54)
+          if(pad>93 && pad<95)
           {
-            if(row>=0 && row<=3)
+            if(tb>=11 && tb<=13)
             {
-              
-                  cout << row << "r  "  << pad << "  p"<< adc << " adc "<< endl;
+              int sumofpads = 0;
+              padsum[tb] +=adc;
+              sumofpads = (adc) + (adc+1) +(adc +2);
+              //looking for local max of pad value
+              if (padsum[tb]>padsum[tb-1] && padsum[tb]>padsum[tb+1])
+              {
 
-
+                cout << " tb " << tb  << "  p: "<< pad << " adc: " << adc
+                << " padsum local max: " << padsum[tb] << endl;
+              }
+              cout << " tb " << tb  << "  p: "<< pad << " adc: " << adc
+              << " padsum: " << padsum[tb] << " Sum of three pads: " <<
+              sumofpads<< endl;
             }
+            hPadvtbfor1->Fill(padsum[tb],adc);
           }
-          hPadvRowfor1->Fill(padsum[pad][row],adc);
         }
+      }// digit loop
+    }//iev loop
 
-      }
-
-    } // digit loop
-
-    TCanvas* c5 = new TCanvas("c5", "hPadvRow1 ", 600, 600);
+    TCanvas* c5 = new TCanvas("c5", "hPadvtb1 ", 600, 600);
 
     //std::vector<int> dete;
-    for (int d = 1; d < 10; ++d) {
-      if (hPadvRow1[d]->GetEntries() < kMINENTRIES) {
+    for (int d = 1; d < 12; ++d) {
+      if (hPadvtb1[d]->GetEntries() < kMINENTRIES) {
         continue;
       }
-      hPadvRow1[d]->Draw("COLZ");
-      hPadvRow1[d]->Draw("TEXT90,SAME");
+      hPadvtb1[d]->Draw("COLZ");
+      hPadvtb1[d]->Draw("TEXT90,SAME");
 
     }
-    c5->SaveAs("hPadvRow1.pdf");
+    c5->SaveAs("hPadvtb1.pdf");
 
-    TCanvas* c1 = new TCanvas("c1", "hPadvRowfor1 ", 600, 600);
+    TCanvas* c1 = new TCanvas("c1", "hPadvtbfor1 ", 600, 600);
+    // for (int de = 1; de < 10; ++de) {
+    //   if (hPadvtbfor1[de]->GetEntries() < kMINENTRIES) {
+    //     continue;
+    //   }
+    hPadvtbfor1->Draw("COLZ");
+    hPadvtbfor1->Draw("TEXT90,SAME");
 
-    hPadvRowfor1->Draw("COLZ");
-    hPadvRowfor1->Draw("TEXT90,SAME");
+    c1->SaveAs("hPadvtbfor1.pdf");
 
-    c1->SaveAs("hPadvRowfor1.pdf");
-
-  }
- }
+}
+}
