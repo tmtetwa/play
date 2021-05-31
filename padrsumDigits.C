@@ -49,7 +49,7 @@ void padrsumDigits(std::string digifile = "trddigits.root",
 
           for (int tb = 0; tb < o2::trd::constants::TIMEBINS; ++tb) {
             ADC_t adc = adcs[tb];
-            if (adc == (ADC_t)TRDSimParam::Instance()->GetADCoutRange()) {
+            if (adc == (ADC_t)SimParam::instance()->getADCoutRange()) {
               // LOG(INFO) << "Out of range ADC " << adc;
               continue;
             }

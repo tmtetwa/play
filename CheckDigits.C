@@ -34,10 +34,10 @@ using namespace o2::trd;
 
 constexpr int kMINENTRIES = 100;
 
-void CheckDigits(std::string digifile = "trddigits.root",
-                 std::string hitfile = "o2sim_HitsTRD.root",
+void CheckDigits(std::string digifile = "/scratch/alice/trddigits.root",
+                 std::string hitfile = "/scratch/alice/o2sim_HitsTRD.root",
                  std::string inputGeom = "",
-                 std::string paramfile = "o2sim_par.root")
+                 std::string paramfile = "/scratch/alice/o2sim_par.root")
 {
   TFile* fin = TFile::Open(digifile.data());
   TTree* digitTree = (TTree*)fin->Get("o2sim");
@@ -66,7 +66,7 @@ void CheckDigits(std::string digifile = "trddigits.root",
 
       for (int tb = 0; tb < o2::trd::constants::TIMEBINS; ++tb) {
         ADC_t adc = adcs[tb];
-        if (adc == (ADC_t)TRDSimParam::Instance()->GetADCoutRange()) {
+        if (adc == (ADC_t)SimParam::instance()->getADCoutRange()) {
         // LOG(INFO) << "Out of range ADC " << adc;
            continue;
         }
